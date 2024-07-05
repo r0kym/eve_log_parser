@@ -2,6 +2,10 @@
 name = "eve-log-parser"
 version = "0.1.0"
 edition = "2021"
+authors = ["T'rahk Rokym"]
+description = "Crate providing utilities to parse EVE online logs"
+repository = "https://github.com/r0kym/eve_log_parser"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
