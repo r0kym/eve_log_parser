@@ -10,6 +10,12 @@ use regex::{Captures, Regex};
 
 use crate::models::*;
 
+const HEADER_REGEX: &str = r"(?m)^------------------------------------------------------------$
+^  Gamelog$
+^  Listener: (?P<name>.+)$
+^  Session Started: (?<timestamp>\d{4}.\d{2}.\d{2} \d{2}:\d{2}:\d{2})$
+^------------------------------------------------------------$";
+
 const DAMAGE_REXEX: &str = r"(?i)\[ (?P<timestamp>\d{4}.\d{2}.\d{2} \d{2}:\d{2}:\d{2}) \] \(combat\) <color=0x[0-9a-f]{8}><b>(?P<damage>\d+)</b> <color=0x[0-9a-f]{8}><font size=\d+>(?P<destination>(to|from))</font> <b><color=0x[0-9a-f]{8}>(?P<pilot>.+)\[(?P<ticker>.+)\]\((?P<shiptype>.+)\)</b><font size=\d+><color=0x[0-9a-f]{8}> - (?P<weapon>.+) - ((Smashes)|(Penetrates)|(Hits)|(Glances Off)|(Grazes))\n";
 
 const LOGI_REGEX: &str = r"(?i)^\[ (?P<timestamp>\d{4}.\d{2}.\d{2} \d{2}:\d{2}:\d{2}) \] \(combat\) <color=0x[0-9a-f]{8}><b>(?P<damage>\d+)</b><color=0x[0-9a-f]{8}><font size=\d+> remote ((armor)|(shield)|(hull)) .+ (?P<destination>(by|to)) </font><b><color=0x[0-9a-f]{8}><font size=\d+><color=0x[0-9a-f]{8}> <b>(?P<shiptype>.+)</b></color></font><color=0x[0-9a-f]{8}> \[(?P<pilot>.+)\]<color=0x[0-9a-f]{8}><b> -</color> </b><color=0x[0-9a-f]{8}><font size=\d+> - (?P<reptype>.+)</font>\n";
@@ -51,6 +57,19 @@ pub fn parse_log_line(text: String) -> Option<Log> {
         None
     }
 
+}
+
+/// Extracts the character name and the logfile's beginning from its header
+pub fn parse_log_header(header: String) -> Option<(String, DateTime::<Utc>)> {
+    let header_re = Regex::new(HEADER_REGEX).unwrap();
+    
+    if let Some(capture) =  header_re.captures(header.as_str()) {
+        let log_beginning =  parse_datetime(&capture["timestamp"]);
+        let character_name = capture["name"].to_string();
+        Some((character_name, log_beginning))
+    } else {
+        None
+    }
 }
 
 /// Takes the caputre of a regex and tries to create a Damage log out of it
@@ -108,7 +127,7 @@ mod tests {
 
     use crate::parser::{Destination, LogiLog};
 
-    use super::{parse_log_line, DamageLog, Log};
+    use super::{parse_log_header, parse_log_line, DamageLog, Log};
 
 
     #[test]
@@ -179,6 +198,28 @@ mod tests {
 
         assert_eq!(parser_output1, Log::Logi(expected_output1));
         assert_eq!(parser_output2, Log::Logi(expected_output2));
+    }
+
+    #[test]
+    fn test_header_parsing() {
+
+    let header1 = 
+"------------------------------------------------------------
+  Gamelog
+  Listener: T'rahk Rokym
+  Session Started: 2024.07.02 19:41:40
+------------------------------------------------------------\n".to_string();
+
+    let expected_output1 = Some((
+        "T'rahk Rokym".to_string(),
+        Utc.with_ymd_and_hms(2024, 07, 02, 19, 41, 40).unwrap(),
+    ));
+
+    let output1 = parse_log_header(header1);
+
+    assert_eq!(output1, expected_output1)
+
+
     }
 
 }
