@@ -5,6 +5,9 @@
 //! directory as they're being written by the game
 
 mod parser;
+mod watcher;
+
 pub mod models;
 
 pub use parser::parse_log_line;
+pub use watcher::{watch_log_file, get_log_folder};

@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Serialize, Deserialize};
 
-/// Log of damage either inflicted to a player or dealt by another player
+/// Log of damage 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DamageLog {
     timestamp: DateTime::<Utc>,
@@ -13,6 +13,7 @@ pub struct DamageLog {
 }
 
 impl DamageLog {
+    /// Builds a new DamageLog
     pub fn new(timestamp: DateTime::<Utc>, damage: isize, other_player: String, other_ship: String, weapon: String, destination: Destination) -> Self {
         DamageLog { timestamp, damage, other_player, other_ship, weapon, destination }
     } 
@@ -31,16 +32,20 @@ pub struct LogiLog {
 }
 
 impl LogiLog {
+    /// Builds a new [LogiLog]
     pub fn new(timestamp: DateTime::<Utc>, amount: isize, other_player: String, other_ship: String, rep_type: String, destination: Destination) -> Self {
         LogiLog { timestamp, amount, other_player, other_ship, rep_type, destination }
     }
 }
 
-/// Represents if the log is received from another player (being shot at, being repped, ...) or
-/// if you're its source (you're shooting, you're repping, ...)
+/// Represents if the log is created by the player or not
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Destination {
+    /// The log is received by the player
+    /// (being shot at, being repped, ...)
     Receiving,
+    /// The log is initiated by the player
+    /// (shooting someone, repping someone, ...)
     Dealing,
 }
 
@@ -50,3 +55,4 @@ pub enum Log {
     Damage(DamageLog), 
     Logi(LogiLog),
 }
+

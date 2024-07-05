@@ -44,7 +44,7 @@ const LOGI_REGEX: &str = r"(?i)^\[ (?P<timestamp>\d{4}.\d{2}.\d{2} \d{2}:\d{2}:\
 ///
 /// assert_eq!(expected_output, output);
 /// ```
-pub fn parse_log_line(text: String) -> Option<Log> {
+pub fn parse_log_line(text: &String) -> Option<Log> {
 
     let damage_re: Regex = Regex::new(DAMAGE_REXEX).unwrap();
     let logi_re: Regex = Regex::new(LOGI_REGEX).unwrap();
