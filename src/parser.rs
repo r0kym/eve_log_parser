@@ -8,43 +8,7 @@ More work will be needed to make the parser universal.
 use chrono::{DateTime, NaiveDateTime, Utc};
 use regex::{Captures, Regex};
 
-/// General struct embedding any kind of log
-#[derive(Debug, PartialEq, Eq)]
-pub enum Log {
-   Damage(DamageLog), 
-   Logi(LogiLog),
-}
-
-/// Log of damage either inflicted to a player or dealt by another player
-#[derive(Debug, PartialEq, Eq)]
-pub struct DamageLog {
-    timestamp: DateTime::<Utc>,
-    damage: isize,
-    other_player: String,
-    other_ship: String,
-    weapon: String,
-    destination: Destination,
-}
-
-
-/// Log of logi reps
-#[derive(Debug, PartialEq, Eq)]
-pub struct LogiLog {
-    timestamp: DateTime::<Utc>,
-    amount: isize,
-    other_player: String,
-    other_ship: String,
-    rep_type: String,
-    destination: Destination,
-}
-
-/// Represents if the log is received from another player (being shot at, being repped, ...) or
-/// if you're its source (you're shooting, you're repping, ...)
-#[derive(Debug, PartialEq, Eq)]
-pub enum Destination {
-    Receiving,
-    Dealing,
-}
+use crate::models::*;
 
 const DAMAGE_REXEX: &str = r"(?i)\[ (?P<timestamp>\d{4}.\d{2}.\d{2} \d{2}:\d{2}:\d{2}) \] \(combat\) <color=0x[0-9a-f]{8}><b>(?P<damage>\d+)</b> <color=0x[0-9a-f]{8}><font size=\d+>(?P<destination>(to|from))</font> <b><color=0x[0-9a-f]{8}>(?P<pilot>.+)\[(?P<ticker>.+)\]\((?P<shiptype>.+)\)</b><font size=\d+><color=0x[0-9a-f]{8}> - (?P<weapon>.+) - ((Smashes)|(Penetrates)|(Hits)|(Glances Off)|(Grazes))\n";
 
@@ -52,6 +16,28 @@ const LOGI_REGEX: &str = r"(?i)^\[ (?P<timestamp>\d{4}.\d{2}.\d{2} \d{2}:\d{2}:\
 
 
 /// Read any log line from eve and creates an appropriate log if possible
+///
+/// # Example:
+/// ```
+/// use chrono::{TimeZone, Utc};
+/// use eve_log_parser::models::{Log, DamageLog, Destination};
+/// use eve_log_parser::parse_log_line;
+///
+///
+/// let log: String = "[ 2024.07.02 20:31:28 ] (combat) <color=0xff00ffff><b>200</b> <color=0x77ffffff><font size=10>to</font> <b><color=0xffffffff>Hornet EC-300[-15.0](Hornet EC-300)</b><font size=10><color=0x77ffffff> - Draclira's Modified Tachyon Beam Laser - Penetrates\n".to_string();        
+/// let expected_output = Log::Damage(DamageLog::new(
+///     Utc.with_ymd_and_hms(2024, 7, 2, 20, 31, 28).unwrap(),
+///     200,
+///     "Hornet EC-300".to_string(),
+///     "Hornet EC-300".to_string(),
+///     "Draclira's Modified Tachyon Beam Laser".to_string(),
+///     Destination::Dealing, 
+/// ));
+///
+/// let output = parse_log_line(log).unwrap();
+///
+/// assert_eq!(expected_output, output);
+/// ```
 pub fn parse_log_line(text: String) -> Option<Log> {
 
     let damage_re: Regex = Regex::new(DAMAGE_REXEX).unwrap();
@@ -75,19 +61,20 @@ fn make_damage_log_from_capture(capture: &Captures) -> Option<Log> {
             "from" => Destination::Receiving,
             _ => panic!("Unexpected token")
         };
-        Some(Log::Damage(DamageLog {
-            timestamp: parse_datetime(&capture["timestamp"]),
-            damage, 
-            other_player: capture["pilot"].to_string(), 
-            other_ship: capture["shiptype"].to_string(), 
-            weapon: capture["weapon"].to_string(),
-            destination,
-        }))
+        Some(Log::Damage(DamageLog::new(
+                    parse_datetime(&capture["timestamp"]), 
+                    damage, 
+                    capture["pilot"].to_string(),
+                    capture["shiptype"].to_string(),
+                    capture["weapon"].to_string(),
+                    destination,
+        )))
     } else {
         None
     }
 }
 
+/// Takes the caputre of a regex and tries to create a Logi log out of it
 fn make_logi_log_from_capture(capture: &Captures) -> Option<Log> {
     if let Ok(amount) = capture["damage"].parse::<isize>() {
         let destination = match capture["destination"].as_ref() {
@@ -95,14 +82,14 @@ fn make_logi_log_from_capture(capture: &Captures) -> Option<Log> {
             "to" => Destination::Dealing,
             _ => panic!("Unexpected token"),
         };
-        Some(Log::Logi(LogiLog {
-            timestamp: parse_datetime(&capture["timestamp"]),
-            amount, 
-            other_player: capture["pilot"].to_string(), 
-            other_ship: capture["shiptype"].to_string(), 
-            rep_type: capture["reptype"].to_string(),
-            destination,
-        }))
+        Some(Log::Logi(LogiLog::new(
+                    parse_datetime(&capture["timestamp"]), 
+                    amount, 
+                    capture["pilot"].to_string(),
+                    capture["shiptype"].to_string(),
+                    capture["reptype"].to_string(),
+                    destination,
+        )))
     } else {
         None
     }
@@ -134,30 +121,30 @@ mod tests {
         let parser_output2 = parse_log_line(log_string2).unwrap();
         let parser_output3 = parse_log_line(log_string3).unwrap();
 
-        let expected_output1 = DamageLog {
-            timestamp: Utc.with_ymd_and_hms(2024, 7, 2, 20, 31, 28).unwrap(),
-            damage: 200,
-            other_player: "Hornet EC-300".to_string(),
-            other_ship: "Hornet EC-300".to_string(),
-            weapon: "Draclira's Modified Tachyon Beam Laser".to_string(),
-            destination: Destination::Dealing, 
-        };
-        let expected_output2 = DamageLog {
-            timestamp: Utc.with_ymd_and_hms(2024, 06, 25, 15, 20, 01).unwrap(),
-            damage: 375,
-            other_player: "Tek'wka Rokym".to_string(),
-            other_ship: "Paladin".to_string(),
-            weapon: "Imperial Navy Large EMP Smartbomb".to_string(),
-            destination: Destination::Receiving,
-        };
-        let expected_output3 = DamageLog {
-            timestamp: Utc.with_ymd_and_hms(2024, 07, 02, 19, 42, 05).unwrap(),
-            damage: 153,
-            other_player: "Kilyavi Alaailaa".to_string(),
-            other_ship: "Capsule".to_string(),
-            weapon: "Medium Vorton Projector II".to_string(),
-            destination: Destination::Dealing,
-        };
+        let expected_output1 = DamageLog::new(
+            Utc.with_ymd_and_hms(2024, 7, 2, 20, 31, 28).unwrap(),
+            200,
+            "Hornet EC-300".to_string(),
+            "Hornet EC-300".to_string(),
+            "Draclira's Modified Tachyon Beam Laser".to_string(),
+            Destination::Dealing, 
+        );
+        let expected_output2 = DamageLog::new (
+            Utc.with_ymd_and_hms(2024, 06, 25, 15, 20, 01).unwrap(),
+            375,
+            "Tek'wka Rokym".to_string(),
+            "Paladin".to_string(),
+            "Imperial Navy Large EMP Smartbomb".to_string(),
+            Destination::Receiving,
+        );
+        let expected_output3 = DamageLog::new (
+            Utc.with_ymd_and_hms(2024, 07, 02, 19, 42, 05).unwrap(),
+            153,
+            "Kilyavi Alaailaa".to_string(),
+            "Capsule".to_string(),
+            "Medium Vorton Projector II".to_string(),
+            Destination::Dealing,
+        );
 
         assert_eq!(parser_output1, Log::Damage(expected_output1));
         assert_eq!(parser_output2, Log::Damage(expected_output2));
@@ -173,22 +160,22 @@ mod tests {
         let parser_output1 = parse_log_line(log_string1).unwrap();
         let parser_output2 = parse_log_line(log_string2).unwrap();
 
-        let expected_output1 = LogiLog {
-            timestamp: Utc.with_ymd_and_hms(2024, 7, 2, 19, 13, 23).unwrap(),
-            amount: 772,
-            other_player: "Drentu".to_string(),
-            other_ship: "Osprey".to_string(),
-            rep_type: "Medium Ancillary Remote Shield Booster".to_string(),
-            destination: Destination::Receiving, 
-        };
-        let expected_output2 = LogiLog {
-            timestamp: Utc.with_ymd_and_hms(2024, 07, 02, 20, 14, 35).unwrap(),
-            amount: 665,
-            other_player: "Drentu".to_string(),
-            other_ship: "Scimitar".to_string(),
-            rep_type: "Large Remote Shield Booster II".to_string(),
-            destination: Destination::Receiving,
-        };
+        let expected_output1 = LogiLog::new (
+            Utc.with_ymd_and_hms(2024, 7, 2, 19, 13, 23).unwrap(),
+            772,
+            "Drentu".to_string(),
+            "Osprey".to_string(),
+            "Medium Ancillary Remote Shield Booster".to_string(),
+            Destination::Receiving, 
+        );
+        let expected_output2 = LogiLog::new (
+            Utc.with_ymd_and_hms(2024, 07, 02, 20, 14, 35).unwrap(),
+            665,
+            "Drentu".to_string(),
+            "Scimitar".to_string(),
+            "Large Remote Shield Booster II".to_string(),
+            Destination::Receiving,
+        );
 
         assert_eq!(parser_output1, Log::Logi(expected_output1));
         assert_eq!(parser_output2, Log::Logi(expected_output2));
