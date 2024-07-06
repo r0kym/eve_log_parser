@@ -1,11 +1,11 @@
 use chrono::{DateTime, Utc};
 use log::debug;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
-/// Log of damage 
+/// Log of damage
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DamageLog {
-    timestamp: DateTime::<Utc>,
+    timestamp: DateTime<Utc>,
     damage: isize,
     other_player: String,
     other_ship: String,
@@ -15,17 +15,33 @@ pub struct DamageLog {
 
 impl DamageLog {
     /// Builds a new DamageLog
-    pub fn new(timestamp: DateTime::<Utc>, damage: isize, other_player: String, other_ship: String, weapon: String, destination: Destination) -> Self {
-        debug!("Creating a new damagelog ({},{},{},{},{},{:?})", timestamp, damage, other_player, other_ship, weapon, destination);
-        DamageLog { timestamp, damage, other_player, other_ship, weapon, destination }
-    } 
+    pub fn new(
+        timestamp: DateTime<Utc>,
+        damage: isize,
+        other_player: String,
+        other_ship: String,
+        weapon: String,
+        destination: Destination,
+    ) -> Self {
+        debug!(
+            "Creating a new damagelog ({},{},{},{},{},{:?})",
+            timestamp, damage, other_player, other_ship, weapon, destination
+        );
+        DamageLog {
+            timestamp,
+            damage,
+            other_player,
+            other_ship,
+            weapon,
+            destination,
+        }
+    }
 }
-
 
 /// Log of logi reps
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LogiLog {
-    timestamp: DateTime::<Utc>,
+    timestamp: DateTime<Utc>,
     amount: isize,
     other_player: String,
     other_ship: String,
@@ -35,9 +51,26 @@ pub struct LogiLog {
 
 impl LogiLog {
     /// Builds a new [LogiLog]
-    pub fn new(timestamp: DateTime::<Utc>, amount: isize, other_player: String, other_ship: String, rep_type: String, destination: Destination) -> Self {
-        debug!("Creating a new damagelog ({},{},{},{},{},{:?})", timestamp, amount, other_player, other_ship, rep_type, destination);
-        LogiLog { timestamp, amount, other_player, other_ship, rep_type, destination }
+    pub fn new(
+        timestamp: DateTime<Utc>,
+        amount: isize,
+        other_player: String,
+        other_ship: String,
+        rep_type: String,
+        destination: Destination,
+    ) -> Self {
+        debug!(
+            "Creating a new damagelog ({},{},{},{},{},{:?})",
+            timestamp, amount, other_player, other_ship, rep_type, destination
+        );
+        LogiLog {
+            timestamp,
+            amount,
+            other_player,
+            other_ship,
+            rep_type,
+            destination,
+        }
     }
 }
 
@@ -55,7 +88,6 @@ pub enum Destination {
 /// General struct embedding any kind of log
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Log {
-    Damage(DamageLog), 
+    Damage(DamageLog),
     Logi(LogiLog),
 }
-

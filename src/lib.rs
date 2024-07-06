@@ -1,4 +1,4 @@
-//! This crate will give all the functionalities to read eve logs and parse them 
+//! This crate will give all the functionalities to read eve logs and parse them
 //!
 //! Currently it will be able to read out damage and logi logs.
 //! It needs to be extended with other log types and the functionalities to read logs from the log
@@ -10,4 +10,4 @@ mod watcher;
 pub mod models;
 
 pub use parser::parse_log_line;
-pub use watcher::{watch_log_file, get_log_folder};
+pub use watcher::{get_log_folder, watch_log_file};
