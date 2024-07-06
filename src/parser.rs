@@ -49,10 +49,10 @@ pub fn parse_log_line(text: &String) -> Option<Log> {
     let damage_re: Regex = Regex::new(DAMAGE_REXEX).unwrap();
     let logi_re: Regex = Regex::new(LOGI_REGEX).unwrap();
 
-    if let Some(capture) = damage_re.captures(&text) {
+    if let Some(capture) = damage_re.captures(text) {
         debug!("Damage log recognized");
         make_damage_log_from_capture(&capture)
-    } else if let Some(capture) = logi_re.captures(&text) {
+    } else if let Some(capture) = logi_re.captures(text) {
         debug!("Logi log recognized");
         make_logi_log_from_capture(&capture)
     } else {
@@ -83,10 +83,7 @@ fn make_damage_log_from_capture(capture: &Captures) -> Option<Log> {
         let destination = match capture["destination"].as_ref() {
             "to" => Destination::Dealing,
             "from" => Destination::Receiving,
-            _ => panic!(
-                "Unexpected token received - {}",
-                capture["destination"].to_string()
-            ),
+            _ => panic!("Unexpected token received - {}", &capture["destination"]),
         };
         Some(Log::Damage(DamageLog::new(
             parse_datetime(&capture["timestamp"]),
@@ -97,10 +94,7 @@ fn make_damage_log_from_capture(capture: &Captures) -> Option<Log> {
             destination,
         )))
     } else {
-        error!(
-            "Couldn't parse the damage - {}",
-            capture["damage"].to_string()
-        );
+        error!("Couldn't parse the damage - {}", &capture["damage"]);
         None
     }
 }
@@ -111,10 +105,7 @@ fn make_logi_log_from_capture(capture: &Captures) -> Option<Log> {
         let destination = match capture["destination"].as_ref() {
             "by" => Destination::Receiving,
             "to" => Destination::Dealing,
-            _ => panic!(
-                "Unexpected token received - {}",
-                capture["destination"].to_string()
-            ),
+            _ => panic!("Unexpected token received - {}", &capture["destination"]),
         };
         Some(Log::Logi(LogiLog::new(
             parse_datetime(&capture["timestamp"]),

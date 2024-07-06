@@ -9,5 +9,5 @@ mod watcher;
 
 pub mod models;
 
-pub use parser::parse_log_line;
+pub use parser::{parse_log_header, parse_log_line};
 pub use watcher::{get_log_folder, watch_log_file};

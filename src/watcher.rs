@@ -59,15 +59,13 @@ pub async fn watch_log_file(logfile: PathBuf) -> impl Stream<Item = Log> {
             info!("new content: {}", log_contents);
             parse_log_line(&log_contents)
         })
-        .filter_map(|log| future::ready(log)) // removes Nones
+        .filter_map(future::ready) // removes Nones from the stream
 }
 
 /// This function will filter events to keep only the events of type `Event::ModifyKind`
 fn filter_ok_events(event: &Event) -> bool {
-    if let notify::event::EventKind::Modify(modifiy_event) = event.kind {
-        if let notify::event::ModifyKind::Data(_) = modifiy_event {
-            return true;
-        }
+    if let notify::event::EventKind::Modify(notify::event::ModifyKind::Data(_)) = event.kind {
+        return true;
     }
     false
 }
