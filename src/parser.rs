@@ -40,7 +40,7 @@ const LOGI_REGEX: &str = r"(?i)^\[ (?P<timestamp>\d{4}.\d{2}.\d{2} \d{2}:\d{2}:\
 ///     Destination::Dealing, 
 /// ));
 ///
-/// let output = parse_log_line(log).unwrap();
+/// let output = parse_log_line(&log).unwrap();
 ///
 /// assert_eq!(expected_output, output);
 /// ```
@@ -136,9 +136,9 @@ mod tests {
         let log_string2 = "[ 2024.06.25 15:20:01 ] (combat) <color=0xffcc0000><b>375</b> <color=0x77ffffff><font size=10>from</font> <b><color=0xffffffff>Tek'wka Rokym[WH.SQ](Paladin)</b><font size=10><color=0x77ffffff> - Imperial Navy Large EMP Smartbomb - Hits\n".to_string();        
         let log_string3 = "[ 2024.07.02 19:42:05 ] (combat) <color=0xff00ffff><b>153</b> <color=0x77ffffff><font size=10>to</font> <b><color=0xffffffff>Kilyavi Alaailaa[-15.0](Capsule)</b><font size=10><color=0x77ffffff> - Medium Vorton Projector II - Hits\n".to_string();
 
-        let parser_output1 = parse_log_line(log_string1).unwrap();
-        let parser_output2 = parse_log_line(log_string2).unwrap();
-        let parser_output3 = parse_log_line(log_string3).unwrap();
+        let parser_output1 = parse_log_line(&log_string1).unwrap();
+        let parser_output2 = parse_log_line(&log_string2).unwrap();
+        let parser_output3 = parse_log_line(&log_string3).unwrap();
 
         let expected_output1 = DamageLog::new(
             Utc.with_ymd_and_hms(2024, 7, 2, 20, 31, 28).unwrap(),
@@ -176,8 +176,8 @@ mod tests {
         let log_string1 = "[ 2024.07.02 19:13:23 ] (combat) <color=0xffccff66><b>772</b><color=0x77ffffff><font size=10> remote shield boosted by </font><b><color=0xffffffff><font size=14><color=0xFFFFFFFF> <b>Osprey</b></color></font><color=0xFFB3B3B3> [Drentu]<color=0xFFFFFFFF><b> -</color> </b><color=0x77ffffff><font size=10> - Medium Ancillary Remote Shield Booster</font>\n".to_string();
         let log_string2 = "[ 2024.07.02 20:14:35 ] (combat) <color=0xffccff66><b>665</b><color=0x77ffffff><font size=10> remote shield boosted by </font><b><color=0xffffffff><font size=14><color=0xFF70FF40> <b>Scimitar</b></color></font><color=0xFFFF4040> [Drentu]<color=0xFFFFFFFF><b> -</color> </b><color=0x77ffffff><font size=10> - Large Remote Shield Booster II</font>\n".to_string();
 
-        let parser_output1 = parse_log_line(log_string1).unwrap();
-        let parser_output2 = parse_log_line(log_string2).unwrap();
+        let parser_output1 = parse_log_line(&log_string1).unwrap();
+        let parser_output2 = parse_log_line(&log_string2).unwrap();
 
         let expected_output1 = LogiLog::new (
             Utc.with_ymd_and_hms(2024, 7, 2, 19, 13, 23).unwrap(),
