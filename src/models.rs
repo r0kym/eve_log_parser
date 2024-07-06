@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use log::debug;
 use serde::{Serialize, Deserialize};
 
 /// Log of damage 
@@ -15,6 +16,7 @@ pub struct DamageLog {
 impl DamageLog {
     /// Builds a new DamageLog
     pub fn new(timestamp: DateTime::<Utc>, damage: isize, other_player: String, other_ship: String, weapon: String, destination: Destination) -> Self {
+        debug!("Creating a new damagelog ({},{},{},{},{},{:?})", timestamp, damage, other_player, other_ship, weapon, destination);
         DamageLog { timestamp, damage, other_player, other_ship, weapon, destination }
     } 
 }
@@ -34,6 +36,7 @@ pub struct LogiLog {
 impl LogiLog {
     /// Builds a new [LogiLog]
     pub fn new(timestamp: DateTime::<Utc>, amount: isize, other_player: String, other_ship: String, rep_type: String, destination: Destination) -> Self {
+        debug!("Creating a new damagelog ({},{},{},{},{},{:?})", timestamp, amount, other_player, other_ship, rep_type, destination);
         LogiLog { timestamp, amount, other_player, other_ship, rep_type, destination }
     }
 }

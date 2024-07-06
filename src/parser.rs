@@ -6,6 +6,7 @@ More work will be needed to make the parser universal.
 */
 
 use chrono::{DateTime, NaiveDateTime, Utc};
+use log::{debug, error, info};
 use regex::{Captures, Regex};
 
 use crate::models::*;
@@ -45,15 +46,18 @@ const LOGI_REGEX: &str = r"(?i)^\[ (?P<timestamp>\d{4}.\d{2}.\d{2} \d{2}:\d{2}:\
 /// assert_eq!(expected_output, output);
 /// ```
 pub fn parse_log_line(text: &String) -> Option<Log> {
-
+    info!("Parsing {}", text);
     let damage_re: Regex = Regex::new(DAMAGE_REXEX).unwrap();
     let logi_re: Regex = Regex::new(LOGI_REGEX).unwrap();
 
     if let Some(capture) = damage_re.captures(&text)  {
+        debug!("Damage log recognized");
         make_damage_log_from_capture(&capture)
     } else if let Some(capture) =  logi_re.captures(&text) {
+        debug!("Logi log recognized");
         make_logi_log_from_capture(&capture) 
     } else {
+        debug!("Log type not recognized");
         None
     }
 
@@ -61,13 +65,16 @@ pub fn parse_log_line(text: &String) -> Option<Log> {
 
 /// Extracts the character name and the logfile's beginning from its header
 pub fn parse_log_header(header: String) -> Option<(String, DateTime::<Utc>)> {
+    info!("Parsing header {}", header);
     let header_re = Regex::new(HEADER_REGEX).unwrap();
     
     if let Some(capture) =  header_re.captures(header.as_str()) {
+        debug!("Recognized the header");
         let log_beginning =  parse_datetime(&capture["timestamp"]);
         let character_name = capture["name"].to_string();
         Some((character_name, log_beginning))
     } else {
+        debug!("Didn't recognize the header format");
         None
     }
 }
@@ -78,7 +85,7 @@ fn make_damage_log_from_capture(capture: &Captures) -> Option<Log> {
         let destination = match capture["destination"].as_ref() {
             "to" => Destination::Dealing,
             "from" => Destination::Receiving,
-            _ => panic!("Unexpected token")
+            _ => panic!("Unexpected token received - {}", capture["destination"].to_string())
         };
         Some(Log::Damage(DamageLog::new(
                     parse_datetime(&capture["timestamp"]), 
@@ -89,6 +96,7 @@ fn make_damage_log_from_capture(capture: &Captures) -> Option<Log> {
                     destination,
         )))
     } else {
+        error!("Couldn't parse the damage - {}", capture["damage"].to_string());
         None
     }
 }
@@ -99,7 +107,7 @@ fn make_logi_log_from_capture(capture: &Captures) -> Option<Log> {
         let destination = match capture["destination"].as_ref() {
             "by" => Destination::Receiving,
             "to" => Destination::Dealing,
-            _ => panic!("Unexpected token"),
+            _ => panic!("Unexpected token received - {}", capture["destination"].to_string()),
         };
         Some(Log::Logi(LogiLog::new(
                     parse_datetime(&capture["timestamp"]), 
@@ -110,6 +118,7 @@ fn make_logi_log_from_capture(capture: &Captures) -> Option<Log> {
                     destination,
         )))
     } else {
+        error!("Couldn't parse the amount - {}", capture["amount"].to_string());
         None
     }
 }

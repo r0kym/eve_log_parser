@@ -5,8 +5,8 @@ use std::{fs::{self, File}, io::{Read, Seek, SeekFrom}, path::PathBuf};
 
 use futures::{future, channel::mpsc::{channel, Receiver}, SinkExt, Stream, StreamExt, TryStreamExt};
 use home::home_dir;
-use notify::{event::DataChange, Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
-use log::{error, info};
+use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
+use log::{debug, error, info};
 
 use crate::{models::Log, parse_log_line};
 
@@ -68,6 +68,7 @@ fn filter_ok_events(event: &Event) -> bool {
 
 /// Initiates a watcher and the receiver with default configuration
 fn create_watcher() -> notify::Result<(RecommendedWatcher, Receiver<notify::Result<Event>>)> {
+    debug!("Starting to create a watcher and the receiver");
     let (mut tx, rx) = channel(1);
     let watcher = RecommendedWatcher::new(
         move |res| {
