@@ -22,9 +22,10 @@ use crate::{models::Log, parse_log_line};
 /// done
 pub fn get_log_folder() -> PathBuf {
     let mut path = home_dir().unwrap(); // home directory
+    path.push("Documents");
     path.push("EVE");
     path.push("logs");
-    path.push("gamelogs");
+    path.push("Gamelogs");
     path
 }
 
